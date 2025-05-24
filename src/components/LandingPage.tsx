@@ -259,7 +259,7 @@ const LandingPage = () => {
             Connecting communities, one tap at a time.
           </p>
           <p className="text-sm text-gray-500">
-            © 2025 TuzoTap. Built with ❤️ for local businesses.
+            © 2025 TuzoTap. Built by <a href="https://github.com/MykeShale" target='_blank'><strong>DevMyke</strong></a> with ❤️ for local businesses.
           </p>
         </div>
       </footer>
