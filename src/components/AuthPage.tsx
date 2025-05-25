@@ -49,18 +49,6 @@ const AuthPage = () => {
 
         if (error) throw error;
 
-        // After successful sign in, create or update profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email: data.user.email,
-            user_type: userType,
-            updated_at: new Date().toISOString(),
-          });
-
-        if (profileError) throw profileError;
-
         toast.success('Successfully signed in!');
         navigate('/dashboard');
       } else {
@@ -68,34 +56,24 @@ const AuthPage = () => {
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
+          options: {
+            data: {
+              user_type: userType,
+              full_name: formData.name,
+              phone: formData.phone,
+            },
+          },
         });
 
         if (error) throw error;
 
-        // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user?.id,
-            email: formData.email,
-            full_name: formData.name,
-            phone: formData.phone,
-            user_type: userType,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-
-        if (profileError) throw profileError;
-
         // If business user, create business profile
-        if (userType === 'business' && formData.businessName) {
+        if (userType === 'business' && formData.businessName && data.user) {
           const { error: businessError } = await supabase
             .from('businesses')
             .insert({
-              owner_id: data.user?.id,
+              owner_id: data.user.id,
               name: formData.businessName,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             });
 
           if (businessError) throw businessError;
