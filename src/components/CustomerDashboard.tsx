@@ -1,15 +1,66 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { QrCode, Star, Bell, MapPin, Settings } from 'lucide-react';
+import { QrCode, Star, Bell, MapPin, Settings, LogOut, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CustomerDashboard = () => {
+  const navigate = useNavigate();
   const [totalPoints] = useState(1247);
-  const [userName] = useState('Sarah Johnson');
+  const [userName, setUserName] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        setUserName(profile.full_name || user.email?.split('@')[0] || 'User');
+      }
+    } catch (error: any) {
+      toast.error('Error loading profile');
+      console.error('Error:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast.success('Successfully logged out');
+      navigate('/');
+    } catch (error: any) {
+      toast.error('Error logging out');
+      console.error('Error:', error.message);
+    }
+  };
 
   const recentActivity = [
     { business: 'Coffee Corner', points: 50, date: 'Today', action: 'Check-in' },
@@ -43,7 +94,9 @@ const CustomerDashboard = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-xl font-semibold">Welcome back, {userName.split(' ')[0]}!</h1>
+                <h1 className="text-xl font-semibold">
+                  {loading ? 'Loading...' : `Welcome back, ${userName.split(' ')[0]}!`}
+                </h1>
                 <p className="text-white/80">You have {totalPoints} points</p>
               </div>
             </div>
@@ -51,9 +104,25 @@ const CustomerDashboard = () => {
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
                 <Bell className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-                <Settings className="w-5 h-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                    <Settings className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="w-4 h-4 mr-2" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
