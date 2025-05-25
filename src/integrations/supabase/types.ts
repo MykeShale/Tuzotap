@@ -9,7 +9,133 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          phone: string | null
+          user_type: 'customer' | 'business'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          phone?: string | null
+          user_type: 'customer' | 'business'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          phone?: string | null
+          user_type?: 'customer' | 'business'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      businesses: {
+        Row: {
+          id: string
+          owner_id: string
+          name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          name?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      check_ins: {
+        Row: {
+          id: string
+          user_id: string
+          business_id: string
+          timestamp: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          business_id: string
+          timestamp: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          business_id?: string
+          timestamp?: string
+          created_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          message: string
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          message: string
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          message?: string
+          read?: boolean
+          created_at?: string
+        }
+      }
+      user_rewards: {
+        Row: {
+          id: string
+          user_id: string
+          reward_id: string
+          redeemed: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          reward_id: string
+          redeemed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          reward_id?: string
+          redeemed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
