@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QrCode, Star, MapPin, Bell, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
   const [activeTab, setActiveTab] = useState('customer');
@@ -53,19 +53,23 @@ const LandingPage = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-              <Button 
-                size="lg" 
-                className="bg-gradient-primary hover:opacity-90 text-white shadow-lg hover-lift tap-animation px-8 py-3 text-lg"
-              >
-                Get Started as Customer
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-orange-200 text-orange-600 hover:bg-orange-50 hover-lift tap-animation px-8 py-3 text-lg"
-              >
-                Join as Business
-              </Button>
+              <Link to="/auth">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-primary hover:opacity-90 text-white shadow-lg hover-lift tap-animation px-8 py-3 text-lg"
+                >
+                  Get Started as Customer
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-orange-200 text-orange-600 hover:bg-orange-50 hover-lift tap-animation px-8 py-3 text-lg"
+                >
+                  Join as Business
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -233,20 +237,24 @@ const LandingPage = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              variant="secondary"
-              className="bg-white text-orange-600 hover:bg-gray-50 hover-lift tap-animation px-8 py-3 text-lg"
-            >
-              Start Your Free Trial
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white/10 hover-lift tap-animation px-8 py-3 text-lg"
-            >
-              Schedule Demo
-            </Button>
+            <Link to="/auth">
+              <Button 
+                size="lg"
+                variant="secondary"
+                className="bg-white text-orange-600 hover:bg-gray-50 hover-lift tap-animation px-8 py-3 text-lg"
+              >
+                Start Your Free Trial
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button 
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white/10 hover-lift tap-animation px-8 py-3 text-lg"
+              >
+                Schedule Demo
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
