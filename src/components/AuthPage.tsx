@@ -36,8 +36,33 @@ const AuthPage = () => {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
+  const validateForm = () => {
+    if (authMode === 'signup') {
+      if (!formData.email || !formData.password || !formData.name || !formData.phone) {
+        toast.error('Please fill in all required fields');
+        return false;
+      }
+      if (userType === 'business' && !formData.businessName) {
+        toast.error('Please enter your business name');
+        return false;
+      }
+      if (formData.password.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        return false;
+      }
+    } else {
+      if (!formData.email || !formData.password) {
+        toast.error('Please fill in all required fields');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+    
     setLoading(true);
 
     try {
@@ -62,6 +87,7 @@ const AuthPage = () => {
               full_name: formData.name,
               phone: formData.phone,
             },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
 
@@ -81,6 +107,13 @@ const AuthPage = () => {
 
         toast.success('Account created successfully! Please check your email for verification.');
         setAuthMode('signin');
+        setFormData({
+          email: '',
+          password: '',
+          name: '',
+          phone: '',
+          businessName: '',
+        });
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred during authentication');
@@ -95,6 +128,10 @@ const AuthPage = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
@@ -283,6 +320,7 @@ const AuthPage = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       required
+                      minLength={6}
                       className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                     />
                   </div>
