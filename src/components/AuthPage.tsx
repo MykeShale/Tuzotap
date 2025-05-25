@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,16 +6,124 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface FormData {
+  email: string;
+  password: string;
+  name?: string;
+  phone?: string;
+  businessName?: string;
+}
 
 const AuthPage = () => {
+  const navigate = useNavigate();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [userType, setUserType] = useState<'customer' | 'business'>('customer');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    email: '',
+    password: '',
+    name: '',
+    phone: '',
+    businessName: '',
+  });
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement authentication with Supabase
-    console.log('Auth attempt:', { authMode, userType });
+    setLoading(true);
+
+    try {
+      if (authMode === 'signin') {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) throw error;
+
+        // After successful sign in, create or update profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: data.user.email,
+            user_type: userType,
+            updated_at: new Date().toISOString(),
+          });
+
+        if (profileError) throw profileError;
+
+        toast.success('Successfully signed in!');
+        navigate('/dashboard');
+      } else {
+        // Sign up
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) throw error;
+
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user?.id,
+            email: formData.email,
+            full_name: formData.name,
+            phone: formData.phone,
+            user_type: userType,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+        if (profileError) throw profileError;
+
+        // If business user, create business profile
+        if (userType === 'business' && formData.businessName) {
+          const { error: businessError } = await supabase
+            .from('businesses')
+            .insert({
+              owner_id: data.user?.id,
+              name: formData.businessName,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+
+          if (businessError) throw businessError;
+        }
+
+        toast.success('Account created successfully! Please check your email for verification.');
+        setAuthMode('signin');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred during authentication');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || 'Error signing in with Google');
+    }
   };
 
   return (
@@ -98,11 +205,14 @@ const AuthPage = () => {
               <TabsContent value="signin" className="space-y-4 mt-6">
                 <form onSubmit={handleAuth} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email or Phone</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input 
                       id="email" 
-                      type="text" 
-                      placeholder="Enter your email or phone number"
+                      type="email" 
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
                       className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                     />
                   </div>
@@ -113,6 +223,9 @@ const AuthPage = () => {
                       id="password" 
                       type="password" 
                       placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      required
                       className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                     />
                   </div>
@@ -120,8 +233,9 @@ const AuthPage = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-primary hover:opacity-90 text-white tap-animation"
+                    disabled={loading}
                   >
-                    Sign In
+                    {loading ? 'Signing in...' : 'Sign In'}
                   </Button>
                 </form>
               </TabsContent>
@@ -135,6 +249,9 @@ const AuthPage = () => {
                         id="businessName" 
                         type="text" 
                         placeholder="Your business name"
+                        value={formData.businessName}
+                        onChange={handleInputChange}
+                        required={userType === 'business'}
                         className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                       />
                     </div>
@@ -146,6 +263,9 @@ const AuthPage = () => {
                       id="name" 
                       type="text" 
                       placeholder="Enter your full name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
                       className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                     />
                   </div>
@@ -156,6 +276,9 @@ const AuthPage = () => {
                       id="email" 
                       type="email" 
                       placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
                       className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                     />
                   </div>
@@ -166,6 +289,9 @@ const AuthPage = () => {
                       id="phone" 
                       type="tel" 
                       placeholder="Enter your phone number"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
                       className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                     />
                   </div>
@@ -176,6 +302,9 @@ const AuthPage = () => {
                       id="password" 
                       type="password" 
                       placeholder="Create a password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      required
                       className="transition-all duration-300 focus:ring-2 focus:ring-orange-200"
                     />
                   </div>
@@ -183,8 +312,9 @@ const AuthPage = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-primary hover:opacity-90 text-white tap-animation"
+                    disabled={loading}
                   >
-                    Create Account
+                    {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
               </TabsContent>
@@ -203,6 +333,8 @@ const AuthPage = () => {
             <Button 
               variant="outline" 
               className="w-full border-gray-200 hover:bg-gray-50 tap-animation"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
             >
               Sign in with Google
             </Button>
