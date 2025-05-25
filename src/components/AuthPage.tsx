@@ -75,7 +75,7 @@ const AuthPage = () => {
         if (error) throw error;
 
         toast.success('Successfully signed in!');
-        navigate('/dashboard');
+        navigate('/customer');
       } else {
         // Sign up
         const { data, error } = await supabase.auth.signUp({
